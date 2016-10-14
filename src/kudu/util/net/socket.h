@@ -43,7 +43,7 @@ class Socket {
   ~Socket();
 
   // Close the Socket, checking for errors.
-  Status Close();
+  virtual Status Close();
 
   // call shutdown() on the socket
   Status Shutdown(bool shut_read, bool shut_write);
@@ -110,9 +110,9 @@ class Socket {
   // get the error status using getsockopt(2)
   Status GetSockError() const;
 
-  Status Write(const uint8_t *buf, int32_t amt, int32_t *nwritten);
+  virtual Status Write(const uint8_t *buf, int32_t amt, int32_t *nwritten);
 
-  Status Writev(const struct ::iovec *iov, int iov_len, int32_t *nwritten);
+  virtual Status Writev(const struct ::iovec *iov, int iov_len, int32_t *nwritten);
 
   // Blocking Write call, returns IOError unless full buffer is sent.
   // Underlying Socket expected to be in blocking mode. Fails if any Write() sends 0 bytes.
@@ -122,7 +122,7 @@ class Socket {
   Status BlockingWrite(const uint8_t *buf, size_t buflen, size_t *num_written,
       const MonoTime& deadline);
 
-  Status Recv(uint8_t *buf, int32_t amt, int32_t *nread);
+  virtual Status Recv(uint8_t *buf, int32_t amt, int32_t *nread);
 
   // Blocking Recv call, returns IOError unless requested amt bytes are read.
   // Underlying Socket expected to be in blocking mode. Fails if any Recv() reads 0 bytes.

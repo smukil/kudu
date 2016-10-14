@@ -68,6 +68,7 @@ TEST_F(TestRpc, TestSockaddr) {
 }
 
 TEST_F(TestRpc, TestMessengerCreateDestroy) {
+  LOG(INFO) << "Going to start messenger!";
   shared_ptr<Messenger> messenger(CreateMessenger("TestCreateDestroy"));
   LOG(INFO) << "started messenger " << messenger->name();
   messenger->Shutdown();

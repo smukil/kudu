@@ -50,9 +50,9 @@ class TestSaslRpc : public RpcTestBase {
 
 // Test basic initialization of the objects.
 TEST_F(TestSaslRpc, TestBasicInit) {
-  SaslServer server(kSaslAppName, -1);
+  SaslServer server(kSaslAppName, NULL);
   ASSERT_OK(server.Init(kSaslAppName));
-  SaslClient client(kSaslAppName, -1);
+  SaslClient client(kSaslAppName, NULL);
   ASSERT_OK(client.Init(kSaslAppName));
 }
 
@@ -92,14 +92,14 @@ static void RunNegotiationTest(socket_callable_t server_runner, socket_callable_
 ////////////////////////////////////////////////////////////////////////////////
 
 static void RunAnonNegotiationServer(Socket* conn) {
-  SaslServer sasl_server(kSaslAppName, conn->GetFd());
+  SaslServer sasl_server(kSaslAppName, conn);
   CHECK_OK(sasl_server.Init(kSaslAppName));
   CHECK_OK(sasl_server.EnableAnonymous());
   CHECK_OK(sasl_server.Negotiate());
 }
 
 static void RunAnonNegotiationClient(Socket* conn) {
-  SaslClient sasl_client(kSaslAppName, conn->GetFd());
+  SaslClient sasl_client(kSaslAppName, conn);
   CHECK_OK(sasl_client.Init(kSaslAppName));
   CHECK_OK(sasl_client.EnableAnonymous());
   CHECK_OK(sasl_client.Negotiate());
@@ -113,7 +113,7 @@ TEST_F(TestSaslRpc, TestAnonNegotiation) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void RunPlainNegotiationServer(Socket* conn) {
-  SaslServer sasl_server(kSaslAppName, conn->GetFd());
+  SaslServer sasl_server(kSaslAppName, conn);
   gscoped_ptr<AuthStore> authstore(new AuthStore());
   CHECK_OK(authstore->Add("danger", "burrito"));
   CHECK_OK(sasl_server.Init(kSaslAppName));
@@ -123,7 +123,7 @@ static void RunPlainNegotiationServer(Socket* conn) {
 }
 
 static void RunPlainNegotiationClient(Socket* conn) {
-  SaslClient sasl_client(kSaslAppName, conn->GetFd());
+  SaslClient sasl_client(kSaslAppName, conn);
   CHECK_OK(sasl_client.Init(kSaslAppName));
   CHECK_OK(sasl_client.EnablePlain("danger", "burrito"));
   CHECK_OK(sasl_client.Negotiate());
@@ -138,7 +138,7 @@ TEST_F(TestSaslRpc, TestPlainNegotiation) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void RunPlainFailingNegotiationServer(Socket* conn) {
-  SaslServer sasl_server(kSaslAppName, conn->GetFd());
+  SaslServer sasl_server(kSaslAppName, conn);
   gscoped_ptr<AuthStore> authstore(new AuthStore());
   CHECK_OK(authstore->Add("danger", "burrito"));
   CHECK_OK(sasl_server.Init(kSaslAppName));
@@ -148,7 +148,7 @@ static void RunPlainFailingNegotiationServer(Socket* conn) {
 }
 
 static void RunPlainFailingNegotiationClient(Socket* conn) {
-  SaslClient sasl_client(kSaslAppName, conn->GetFd());
+  SaslClient sasl_client(kSaslAppName, conn);
   CHECK_OK(sasl_client.Init(kSaslAppName));
   CHECK_OK(sasl_client.EnablePlain("unknown", "burrito"));
   Status s = sasl_client.Negotiate();
@@ -163,7 +163,7 @@ TEST_F(TestSaslRpc, TestPlainFailingNegotiation) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void RunTimeoutExpectingServer(Socket* conn) {
-  SaslServer sasl_server(kSaslAppName, conn->GetFd());
+  SaslServer sasl_server(kSaslAppName, conn);
   CHECK_OK(sasl_server.Init(kSaslAppName));
   CHECK_OK(sasl_server.EnableAnonymous());
   Status s = sasl_server.Negotiate();
@@ -172,7 +172,7 @@ static void RunTimeoutExpectingServer(Socket* conn) {
 }
 
 static void RunTimeoutNegotiationClient(Socket* sock) {
-  SaslClient sasl_client(kSaslAppName, sock->GetFd());
+  SaslClient sasl_client(kSaslAppName, sock);
   CHECK_OK(sasl_client.Init(kSaslAppName));
   CHECK_OK(sasl_client.EnableAnonymous());
   MonoTime deadline = MonoTime::Now() - MonoDelta::FromMilliseconds(100L);
@@ -190,7 +190,7 @@ TEST_F(TestSaslRpc, TestClientTimeout) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void RunTimeoutNegotiationServer(Socket* sock) {
-  SaslServer sasl_server(kSaslAppName, sock->GetFd());
+  SaslServer sasl_server(kSaslAppName, sock);
   CHECK_OK(sasl_server.Init(kSaslAppName));
   CHECK_OK(sasl_server.EnableAnonymous());
   MonoTime deadline = MonoTime::Now() - MonoDelta::FromMilliseconds(100L);
@@ -201,7 +201,7 @@ static void RunTimeoutNegotiationServer(Socket* sock) {
 }
 
 static void RunTimeoutExpectingClient(Socket* conn) {
-  SaslClient sasl_client(kSaslAppName, conn->GetFd());
+  SaslClient sasl_client(kSaslAppName, conn);
   CHECK_OK(sasl_client.Init(kSaslAppName));
   CHECK_OK(sasl_client.EnableAnonymous());
   Status s = sasl_client.Negotiate();

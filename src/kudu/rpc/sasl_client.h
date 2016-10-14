@@ -46,7 +46,7 @@ class SaslMessagePB_SaslAuth;
 class SaslClient {
  public:
   // Does not take ownership of the socket indicated by the fd.
-  SaslClient(string app_name, int fd);
+  SaslClient(string app_name, Socket* socket);
   ~SaslClient();
 
   // Enable ANONYMOUS authentication.
@@ -66,6 +66,10 @@ class SaslClient {
   const std::set<RpcFeatureFlag>& server_features() const {
     return server_features_;
   }
+
+  // Set the underlying socket to be used.
+  // Must be called before Init(). Required for some mechanisms.
+  void set_socket(Socket* socket) { sock_ = socket; }
 
   // Specify IP:port of local side of connection.
   // Must be called before Init(). Required for some mechanisms.
@@ -144,7 +148,7 @@ class SaslClient {
   Status ParseError(const Slice& err_data);
 
   string app_name_;
-  Socket sock_;
+  Socket* sock_;
   std::vector<sasl_callback_t> callbacks_;
   gscoped_ptr<sasl_conn_t, SaslDeleter> sasl_conn_;
   SaslHelper helper_;

@@ -188,6 +188,7 @@ static Status DoClientNegotiation(Connection* conn,
                                   const MonoTime& deadline) {
   RETURN_NOT_OK(WaitForClientConnect(conn, deadline));
   RETURN_NOT_OK(conn->SetNonBlocking(false));
+  RETURN_NOT_OK(conn->InitSSLIfNecessary());
   RETURN_NOT_OK(conn->InitSaslClient());
   conn->sasl_client().set_deadline(deadline);
   RETURN_NOT_OK(conn->sasl_client().Negotiate());
@@ -206,6 +207,7 @@ static Status DoServerNegotiation(Connection* conn,
     SleepFor(MonoDelta::FromMilliseconds(FLAGS_rpc_negotiation_inject_delay_ms));
   }
   RETURN_NOT_OK(conn->SetNonBlocking(false));
+  RETURN_NOT_OK(conn->InitSSLIfNecessary());
   RETURN_NOT_OK(conn->InitSaslServer());
   conn->sasl_server().set_deadline(deadline);
   RETURN_NOT_OK(conn->sasl_server().Negotiate());

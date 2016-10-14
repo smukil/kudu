@@ -47,6 +47,7 @@
 #include "kudu/util/metrics.h"
 #include "kudu/util/monotime.h"
 #include "kudu/util/net/socket.h"
+#include "kudu/util/net/ssl_factory.h"
 #include "kudu/util/status.h"
 #include "kudu/util/threadpool.h"
 #include "kudu/util/trace.h"
@@ -103,23 +104,23 @@ MessengerBuilder &MessengerBuilder::set_metric_entity(
 Status MessengerBuilder::Build(Messenger **msgr) {
   RETURN_NOT_OK(SaslInit(kSaslAppName)); // Initialize SASL library before we start making requests
   gscoped_ptr<Messenger> new_msgr(new Messenger(*this));
-  RETURN_NOT_OK(new_msgr.get()->Init());
   *msgr = new_msgr.release();
+  RETURN_NOT_OK((*msgr)->Init());
   return Status::OK();
 }
 
 Status MessengerBuilder::Build(shared_ptr<Messenger> *msgr) {
   Messenger *ptr;
-  RETURN_NOT_OK(Build(&ptr));
-
+  Status build_status = Build(&ptr);
   // See docs on Messenger::retain_self_ for info about this odd hack.
   *msgr = shared_ptr<Messenger>(
     ptr, std::mem_fun(&Messenger::AllExternalReferencesDropped));
-  return Status::OK();
+  return build_status;
 }
 
 // See comment on Messenger::retain_self_ member.
 void Messenger::AllExternalReferencesDropped() {
+  LOG (INFO) << "Deleter called!";
   Shutdown();
   CHECK(retain_self_.get());
   // If we have no more external references, then we no longer
@@ -133,6 +134,7 @@ void Messenger::Shutdown() {
   // Since we're shutting down, it's OK to block.
   ThreadRestrictions::ScopedAllowWait allow_wait;
 
+  LOG (INFO) << "Shutting down!";
   std::lock_guard<percpu_rwlock> guard(lock_);
   if (closing_) {
     return;
@@ -262,6 +264,16 @@ Reactor* Messenger::RemoteToReactor(const Sockaddr &remote) {
 
 Status Messenger::Init() {
   Status status;
+  if (ssl_enabled()) {
+    ssl_factory_.reset(new SSLFactory());
+    RETURN_NOT_OK(ssl_factory_->Init());
+    RETURN_NOT_OK(ssl_factory_->LoadCertificate(
+        "/home/dev/server-cert.pem"));
+    RETURN_NOT_OK(ssl_factory_->LoadPrivateKey(
+        "/home/dev/server-key.pem"));
+    RETURN_NOT_OK(ssl_factory_->LoadCertificateAuthority(
+        "/home/dev/server-certasd.pem"));
+  }
   for (Reactor* r : reactors_) {
     RETURN_NOT_OK(r->Init());
   }

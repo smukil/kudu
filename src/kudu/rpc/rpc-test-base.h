@@ -347,7 +347,10 @@ class RpcTestBase : public KuduTest {
                                        std::min(keepalive_time_ms_, 100)));
     bld.set_metric_entity(metric_entity_);
     std::shared_ptr<Messenger> messenger;
-    CHECK_OK(bld.Build(&messenger));
+    Status stat = bld.Build(&messenger);
+    LOG (INFO) << "Status is: " << stat.ToString();
+    CHECK_OK(stat);
+    LOG (INFO) << "Status is: " << stat.ToString();
     return messenger;
   }
 

@@ -141,13 +141,16 @@ class Connection : public RefCountedThreadSafe<Connection> {
 
   Direction direction() const { return direction_; }
 
-  Socket *socket() { return &socket_; }
+  Socket *socket() { return socket_.get(); }
 
   // Return SASL client instance for this connection.
   SaslClient &sasl_client() { return sasl_client_; }
 
   // Return SASL server instance for this connection.
   SaslServer &sasl_server() { return sasl_server_; }
+
+  // Initialize underlying SSLSocket if SSL is enabled.
+  Status InitSSLIfNecessary();
 
   // Initialize SASL client before negotiation begins.
   Status InitSaslClient();
@@ -226,7 +229,7 @@ class Connection : public RefCountedThreadSafe<Connection> {
   ReactorThread * const reactor_thread_;
 
   // The socket we're communicating on.
-  Socket socket_;
+  gscoped_ptr<Socket> socket_;
 
   // The remote address we're talking to.
   const Sockaddr remote_;

@@ -830,6 +830,16 @@ include_directories(SYSTEM ${SQUEASEL_INCLUDE_DIR})
 ADD_THIRDPARTY_LIB(squeasel
   STATIC_LIB "${SQUEASEL_STATIC_LIB}")
 
+find_package(OpenSSL REQUIRED)
+include_directories(${OPENSSL_INCLUDE_DIR})
+ADD_THIRDPARTY_LIB(openssl_ssl
+  STATIC_LIB "${OPENSSL_SSL}")
+ADD_THIRDPARTY_LIB(openssl_crypto
+  STATIC_LIB "${OPENSSL_CRYPTO}")
+
+#set(OPENSSL_LIBS ${OPENSSL_SSL} ${OPENSSL_CRYPTO})
+#message(STATUS "OpenSSL: ${OPENSSL_LIBS}")
+
 ## Google PerfTools
 ##
 ## Disabled with TSAN/ASAN as well as with gold+dynamic linking (see comment

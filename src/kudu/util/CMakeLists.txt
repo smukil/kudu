@@ -146,6 +146,8 @@ set(UTIL_SRCS
   net/net_util.cc
   net/sockaddr.cc
   net/socket.cc
+  net/ssl_factory.cc
+  net/ssl_socket.cc
   oid_generator.cc
   once.cc
   os-util.cc
@@ -200,6 +202,8 @@ set(UTIL_LIBS
   histogram_proto
   libev
   maintenance_manager_proto
+  openssl_crypto
+  openssl_ssl
   pb_util_proto
   protobuf
   version_info_proto

@@ -46,7 +46,7 @@ class AuthStore;
 class SaslServer {
  public:
   // Does not take ownership of the socket indicated by the fd.
-  SaslServer(string app_name, int fd);
+  SaslServer(string app_name, Socket* socket);
   ~SaslServer();
 
   // Enable ANONYMOUS authentication.
@@ -66,6 +66,10 @@ class SaslServer {
   const std::set<RpcFeatureFlag>& client_features() const {
     return client_features_;
   }
+
+  // Set the underlying socket to be used. 
+  // Must be called before Init(). Required for some mechanisms.
+  void set_socket(Socket* socket) { sock_ = socket; }
 
   // Name of the user that authenticated using plain auth.
   // Must be called after Negotiate() only if the negotiated mechanism was PLAIN.
@@ -142,7 +146,7 @@ class SaslServer {
   Status HandleResponseRequest(const SaslMessagePB& request);
 
   string app_name_;
-  Socket sock_;
+  Socket* sock_;
   std::vector<sasl_callback_t> callbacks_;
   gscoped_ptr<sasl_conn_t, SaslDeleter> sasl_conn_;
   SaslHelper helper_;
