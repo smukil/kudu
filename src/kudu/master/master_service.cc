@@ -32,6 +32,7 @@
 #include "kudu/util/flag_tags.h"
 #include "kudu/util/pb_util.h"
 
+#include "kudu/security/init.h"
 
 DEFINE_int32(master_inject_latency_on_tablet_lookups_ms, 0,
              "Number of milliseconds that the master will sleep before responding to "
@@ -285,6 +286,7 @@ void MasterServiceImpl::ListTabletServers(const ListTabletServersRequestPB* req,
                                           rpc::RpcContext* rpc) {
   vector<std::shared_ptr<TSDescriptor> > descs;
   server_->ts_manager()->GetAllDescriptors(&descs);
+  security::PrintTickets();
   for (const std::shared_ptr<TSDescriptor>& desc : descs) {
     ListTabletServersResponsePB::Entry* entry = resp->add_servers();
     desc->GetNodeInstancePB(entry->mutable_instance_id());

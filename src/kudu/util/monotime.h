@@ -179,6 +179,9 @@ class KUDU_EXPORT MonoTime {
   /// and not ready to use.
   MonoTime();
 
+  /// Build a MonoTime object and initialize it with 'nanos'.
+  explicit MonoTime(int64_t nanos);
+
   /// @return @c true iff the object is initialized.
   bool Initialized() const;
 
@@ -241,7 +244,6 @@ class KUDU_EXPORT MonoTime {
   FRIEND_TEST(TestMonoTime, TestDeltaConversions);
 
   explicit MonoTime(const struct timespec &ts);
-  explicit MonoTime(int64_t nanos);
   double ToSeconds() const;
   int64_t nanos_;
 };

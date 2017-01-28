@@ -220,7 +220,7 @@ Status MiniKdc::CreateKrb5Conf() const {
     dns_lookup_realm = false
     forwardable = true
     renew_lifetime = 7d
-    ticket_lifetime = 24h
+    ticket_lifetime = 3s
 
     # In miniclusters, we start daemons on local loopback IPs that
     # have no reverse DNS entries. So, disable reverse DNS.

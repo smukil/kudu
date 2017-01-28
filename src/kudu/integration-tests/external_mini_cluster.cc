@@ -32,6 +32,7 @@
 #include "kudu/gutil/strings/util.h"
 #include "kudu/master/master.proxy.h"
 #include "kudu/master/master_rpc.h"
+#include "kudu/security/init.h"
 #include "kudu/security/test/mini_kdc.h"
 #include "kudu/server/server_base.pb.h"
 #include "kudu/server/server_base.proxy.h"
@@ -172,6 +173,8 @@ Status ExternalMiniCluster::Start() {
                   opts_.num_tablet_servers,
                   MonoDelta::FromSeconds(kTabletServerRegistrationTimeoutSeconds)));
 
+  LOG (INFO) << "Sleeping for 10S now";
+  SleepFor(MonoDelta::FromSeconds(180));
   return Status::OK();
 }
 
@@ -380,6 +383,8 @@ Status ExternalMiniCluster::WaitForTabletServerCount(int count, const MonoDelta&
       master::ListTabletServersResponsePB resp;
       rpc::RpcController rpc;
       rpc.set_timeout(remaining);
+      time_t now = time(NULL);
+      LOG (INFO) << "Time now: " << now;
       RETURN_NOT_OK_PREPEND(master_proxy(*iter)->ListTabletServers(req, &resp, &rpc),
                             "ListTabletServers RPC failed");
       // ListTabletServers() may return servers that are no longer online.

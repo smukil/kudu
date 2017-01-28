@@ -25,5 +25,7 @@ namespace security {
 // the '--keytab' command line flag.
 Status InitKerberosForServer();
 
+void PrintTickets();
+
 } // namespace security
 } // namespace kudu
