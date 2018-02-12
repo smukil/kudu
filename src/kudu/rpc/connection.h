@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <boost/circular_buffer.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/optional/optional.hpp>
 #include <ev++.h>
@@ -232,6 +233,18 @@ class Connection : public RefCountedThreadSafe<Connection> {
     scheduled_for_shutdown_ = true;
   }
 
+  size_t num_queued_outbound_transfers() const {
+    return outbound_transfers_.size();
+  }
+
+  double rough_kbps() const {
+    double rough_kbps = 0.0;
+    for (int i = 0; i < rolling_kbps_.size(); ++i) {
+      rough_kbps += rolling_kbps_[i];
+    }
+    return rough_kbps / rolling_kbps_.size();
+  }
+
  private:
   friend struct CallAwaitingResponse;
   friend class QueueTransferTask;
@@ -378,6 +391,9 @@ class Connection : public RefCountedThreadSafe<Connection> {
 
   // Whether the connection is scheduled for shutdown.
   bool scheduled_for_shutdown_;
+
+  // Keep a rolling window of the last N transfer speeds in kbps for this connection.
+  boost::circular_buffer<double> rolling_kbps_;
 };
 
 } // namespace rpc

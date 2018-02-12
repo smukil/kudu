@@ -241,6 +241,16 @@ bool OutboundTransfer::TransferFinished() const {
   return false;
 }
 
+int32_t OutboundTransfer::RemainingBytes() const {
+  int32_t rem_in_cur_slice = payload_slices_[cur_slice_idx_].size() - cur_offset_in_slice_;
+  int32_t total_remaining = rem_in_cur_slice;
+  for (int i = cur_slice_idx_ + 1; i < n_payload_slices_; ++i) {
+    total_remaining += payload_slices_[i].size();
+  }
+
+  return total_remaining;
+}
+
 string OutboundTransfer::HexDump() const {
   if (KUDU_SHOULD_REDACT()) {
     return kRedactionMessage;

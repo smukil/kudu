@@ -48,8 +48,8 @@
 #include "kudu/util/net/sockaddr.h"
 #include "kudu/util/net/socket.h"
 #include "kudu/util/status.h"
+#include "kudu/util/stopwatch.h"
 
-using std::function;
 using std::includes;
 using std::set;
 using std::shared_ptr;
@@ -80,6 +80,8 @@ Connection::Connection(ReactorThread *reactor_thread,
       negotiation_complete_(false),
       is_confidential_(false),
       scheduled_for_shutdown_(false) {
+  // Keep a rolling window of the last 1000 transfer speeds in kbps for this connection.
+  rolling_kbps_.set_capacity(1000);
 }
 
 Status Connection::SetNonBlocking(bool enabled) {
@@ -656,13 +658,25 @@ void Connection::WriteHandler(ev::io &watcher, int revents) {
       }
     }
 
+    int32_t bytes_to_be_sent = transfer->RemainingBytes();
     last_activity_time_ = reactor_thread_->cur_time();
+
+    // Do the transfer and time it.
+    Stopwatch send_timer;
+    send_timer.start();
     Status status = transfer->SendBuffer(*socket_);
+    send_timer.stop();
+
     if (PREDICT_FALSE(!status.ok())) {
       LOG(WARNING) << ToString() << " send error: " << status.ToString();
       reactor_thread_->DestroyConnection(this, status);
       return;
     }
+
+    // Add the rough Kbps of this transfer to the rolling window.
+    double num_kbytes_sent = (bytes_to_be_sent - transfer->RemainingBytes()) / 1024;
+    double kbps = num_kbytes_sent / send_timer.elapsed().wall_seconds();
+    rolling_kbps_.push_back(kbps);
 
     if (!transfer->TransferFinished()) {
       DVLOG(3) << ToString() << ": writeHandler: xfer not finished.";
@@ -749,6 +763,9 @@ Status Connection::DumpPB(const DumpRunningRpcsRequestPB& req,
         c->call->DumpPB(req, resp->add_calls_in_flight());
       }
     }
+
+    resp->set_outbound_queue_size(num_queued_outbound_transfers());
+    resp->set_rolling_average_kbps(rough_kbps());
   } else if (direction_ == SERVER) {
     if (negotiation_complete_) {
       // It's racy to dump credentials while negotiating, since the Connection

@@ -148,6 +148,9 @@ class OutboundTransfer : public boost::intrusive::list_base_hook<> {
   // Return the total number of bytes to be sent (including those already sent)
   int32_t TotalLength() const;
 
+  // Returns the total number of yet to be sent (excluding those already sent)
+  int32_t RemainingBytes() const;
+
   std::string HexDump() const;
 
   bool is_for_outbound_call() const {
